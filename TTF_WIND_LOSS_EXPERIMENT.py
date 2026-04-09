@@ -245,7 +245,7 @@ def _train_model(model, x_trn, x_val,
 
 
 # Load wind_loss data
-df  = pd.read_csv("wind_flood_loss_pairs2.csv")
+df  = pd.read_csv("wind_flood_loss_pairs2.0.csv")
 raw = pd.to_numeric(df["wind_loss"], errors="coerce").dropna().values.astype(float)
 rng = np.random.default_rng(42)
 raw = rng.choice(raw[raw > 0], size=min(2000, len(raw[raw > 0])), replace=False)
@@ -260,7 +260,7 @@ x_all  = (losses_log - mu_all) / sd_all
 print(f"Loaded {len(x_all):,} wind_loss observations")
 print(f"Standardised — mean={x_all.mean():.4f}  std={x_all.std():.4f}")
 
-# --- Fit TTF ---
+# Fit TTF 
 MODEL_CFG = dict(num_bins=5, tail_bound=2.5, depth=1)
 model = TTFRQS(**MODEL_CFG)
 _train_model(model, x_all, x_all, tag="ttf-wind",
@@ -347,7 +347,7 @@ print(f"Histogram range: min={counts.min():.4f}  max={counts.max():.4f}")
 
 fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
-# Panel 1: histogram only
+# Panel 1
 ax = axes[0]
 bin_centres = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 ax.bar(bin_centres, counts, width=bin_edges[1]-bin_edges[0],
@@ -357,7 +357,7 @@ ax.set_ylabel("Density", fontsize=11)
 ax.set_title("A · Data Histogram", fontsize=12, fontweight="bold")
 ax.spines[["top","right"]].set_visible(False)
 
-# Panel 2: histogram + TTF fit
+# Panel 2
 ax2 = axes[1]
 ax2.bar(bin_centres, counts, width=bin_edges[1]-bin_edges[0],
         color="#aec6cf", edgecolor="#5a7a85", linewidth=0.6, alpha=0.85, label="Data")
@@ -368,7 +368,7 @@ ax2.set_title("B · Data + TTF Fit", fontsize=12, fontweight="bold")
 ax2.legend(fontsize=9, frameon=False)
 ax2.spines[["top","right"]].set_visible(False)
 
-# Panel 3: upper tail log-density
+# Panel 3
 ax3 = axes[2]
 ax3.plot(xt, lp_tail, lw=2.0, color="#9467bd", label="TTF")
 ax3.set_xlabel("log(Wind Loss) standardised", fontsize=11)
