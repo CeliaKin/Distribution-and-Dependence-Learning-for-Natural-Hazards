@@ -269,63 +269,7 @@ print(f"\nFitted params: lam+={model.lam_pos.item():.4f}  "
       f"mu={model.mu.item():.4f}  "
       f"sigma={torch.exp(model.log_sigma).item():.4f}")
 
-# Plot
-xg       = np.linspace(x_all.min() - 0.3, x_all.max() + 0.3, 300)
-lp       = model.logpdf_np(xg)
-pdf_vals = np.exp(lp)
 
-p90 = np.quantile(x_all, 0.90)
-xt  = np.linspace(p90, x_all.max() + 0.5, 200)
-lp_tail = model.logpdf_np(xt)
-
-counts, bin_edges = np.histogram(x_all, bins=60, density=True)
-print(f"\nPDF range:       min={pdf_vals.min():.4f}  max={pdf_vals.max():.4f}")
-print(f"Histogram range: min={counts.min():.4f}  max={counts.max():.4f}")
-
-fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-
-# Panel 1: histogram only
-ax = axes[0]
-bin_centres = 0.5 * (bin_edges[:-1] + bin_edges[1:])
-ax.bar(bin_centres, counts, width=bin_edges[1]-bin_edges[0],
-       color="#aec6cf", edgecolor="#5a7a85", linewidth=0.6, alpha=0.85)
-ax.set_xlabel("log(Wind Loss) standardised", fontsize=11)
-ax.set_ylabel("Density", fontsize=11)
-ax.set_title("A · Data Histogram", fontsize=12, fontweight="bold")
-ax.spines[["top","right"]].set_visible(False)
-
-# Panel 2: histogram + TTF fit
-ax2 = axes[1]
-ax2.bar(bin_centres, counts, width=bin_edges[1]-bin_edges[0],
-        color="#aec6cf", edgecolor="#5a7a85", linewidth=0.6, alpha=0.85, label="Data")
-ax2.plot(xg, pdf_vals, lw=2.0, color="#9467bd", label="TTF")
-ax2.set_xlabel("log(Wind Loss) standardised", fontsize=11)
-ax2.set_ylabel("Density", fontsize=11)
-ax2.set_title("B · Data + TTF Fit", fontsize=12, fontweight="bold")
-ax2.legend(fontsize=9, frameon=False)
-ax2.spines[["top","right"]].set_visible(False)
-
-# Panel 3: upper tail log-density
-ax3 = axes[2]
-ax3.plot(xt, lp_tail, lw=2.0, color="#9467bd", label="TTF")
-ax3.set_xlabel("log(Wind Loss) standardised", fontsize=11)
-ax3.set_ylabel("Log-density", fontsize=11)
-ax3.set_title("C · Upper Tail Log-Density (above 90th pct)", fontsize=12, fontweight="bold")
-ax3.legend(fontsize=9, frameon=False)
-ax3.spines[["top","right"]].set_visible(False)
-
-fig.suptitle(f"TTF on Wind Loss  (N = {len(x_all):,})",
-             fontsize=13, fontweight="bold")
-plt.tight_layout()
-plt.savefig("ttf_wind_loss_plot.png", dpi=150, bbox_inches="tight")
-plt.show()
-print("Saved -> ttf_wind_loss_plot.png")
-
-dx = xg[1] - xg[0]
-print("Integral of model pdf:", np.sum(pdf_vals * dx))
-
-
-# In[13]:
 
 
 # Plot
