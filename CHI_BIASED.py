@@ -416,7 +416,7 @@ n_marg_tail  = number_observation_points - n_bulk - n_mid_tail - n_upper_tail
 
 obs_bulk = rng_obs.random((n_bulk, number_of_dimension)).astype(np.float32)
 obs_mid_tail = (0.7 + rng_obs.random((n_mid_tail, number_of_dimension)) * 0.295).astype(np.float32)
-a = 3.0
+a = 5.0
 raw = rng_obs.beta(a, 1, size=(n_upper_tail, number_of_dimension))
 obs_upper_tail = (0.9 + raw * 0.099).astype(np.float32)
 obs_marg_tail = rng_obs.random((n_marg_tail, number_of_dimension)).astype(np.float32)
