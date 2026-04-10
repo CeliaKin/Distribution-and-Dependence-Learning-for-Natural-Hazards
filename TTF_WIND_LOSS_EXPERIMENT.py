@@ -137,7 +137,7 @@ def ttf_log_abs_jac_torch(z, lam_pos, lam_neg, sigma):
     return (torch.log(sigma)
             + (-lam_s - 1.0) * torch.log(erfc_val)
            + torch.log(torch.tensor(2.0 / (2.0 * torch.pi)**0.5)))
-            # removed: - 0.5 * z**2
+           
 
 
 
