@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
+# BASIC FLOW ON WINTER WINDSTORM DATA
 
 
 import torch
@@ -10,7 +7,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Data
+
 df = pd.read_csv('winterwindstormwinddata.csv')
 raw_losses = df['loss'].dropna().values
 log_losses = np.log(raw_losses)
@@ -21,7 +18,6 @@ scaled_losses = (log_losses - mu) / std
 
 x_t = torch.tensor(scaled_losses, dtype=torch.float32).view(-1, 1)
 
-# 1D Monotonic Flow
 class MonotonicFlow(nn.Module):
     def __init__(self):
         super().__init__()
