@@ -254,8 +254,8 @@ mu_all = losses_log.mean()
 sd_all = losses_log.std()
 x_all  = (losses_log - mu_all) / sd_all
 
-print(f"Loaded {len(x_all):,} wind_loss observations")
-print(f"Standardised — mean={x_all.mean():.4f}  std={x_all.std():.4f}")
+print(f"Loaded {len(x_all):,} observations")
+
 
 # Fit TTF 
 MODEL_CFG = dict(num_bins=5, tail_bound=2.5, depth=1)
@@ -283,8 +283,7 @@ xt  = np.linspace(p90, x_all.max() + 0.5, 200)
 lp_tail = model.logpdf_np(xt)
 
 counts, bin_edges = np.histogram(x_all, bins=60, density=True)
-print(f"\nPDF range:       min={pdf_vals.min():.4f}  max={pdf_vals.max():.4f}")
-print(f"Histogram range: min={counts.min():.4f}  max={counts.max():.4f}")
+
 
 fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
@@ -323,5 +322,5 @@ fig.suptitle(f"TTF on Wind Loss  (N = {len(x_all):,})",
 plt.tight_layout()
 plt.savefig("ttf_wind_loss_plot.png", dpi=150, bbox_inches="tight")
 plt.show()
-print("Saved -> ttf_wind_loss_plot.png")
+
 
