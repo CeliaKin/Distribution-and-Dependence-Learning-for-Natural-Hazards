@@ -183,7 +183,7 @@ def _train_model(model, x_trn, x_val, n_epochs=2000, lr=5e-3, batch_size=512,
             if verbose and step % (eval_period * 5) == 0:
                 print(f"    [{tag}] step {step:5d}  val_ll={val_ll:.4f}")
             if patience >= early_stop_patience:
-                if verbose: print(f"    [{tag}] early stop at step {step}")
+                if verbose: print(f"    [{tag}] early stop at {step}")
                 break
     if best_state is not None: model.load_state_dict(best_state)
     model.eval()
@@ -247,9 +247,6 @@ class GumbelCopula:
                 self._log_density(u, v, theta))].mean(),
             bounds=(1.0 + 1e-6, self.theta_max), method="bounded")
         self.theta = float(result.x)
-        if verbose:
-            print(f"  Gumbel MLE theta={self.theta:.4f}  tau={self.tau_from_theta(self.theta):.4f}"
-                  f"  lambda_U={self.upper_tail_dep:.4f}")
         return self
     @property
     def upper_tail_dep(self): return float(2.0 - 2.0 ** (1.0 / self.theta))
@@ -288,8 +285,6 @@ class TCopula:
                             - std_t.logpdf(x, df=nu_val) - std_t.logpdf(y, df=nu_val))
         res = minimize(neg_ll, x0=[rho_init, 4.0], bounds=[(-0.99, 0.99), (0.1, 50)])
         self.rho, self.nu = res.x
-        if verbose:
-            print(f"  t-Copula MLE rho={self.rho:.4f}  nu={self.nu:.4f}  lambda={self.tail_dep:.4f}")
         return self
     @property
     def tail_dep(self):
@@ -320,7 +315,7 @@ for i in range(2):
 X_train, X_test = train_test_split(data, test_size=0.33, random_state=42)
 number_of_dimension = 2
 data_domain = np.array([[X_train[:, i].min(), X_train[:, i].max()] for i in range(2)], dtype=np.float32)
-print(f"X_train: {X_train.shape}  X_test: {X_test.shape}")
+
 
 
 # FIT TTF MARGINALS
@@ -328,7 +323,7 @@ print(f"X_train: {X_train.shape}  X_test: {X_test.shape}")
 
 ttf_marginal_list = []
 for i in range(number_of_dimension):
-    print(f"\nFitting TTF marginal {i}...")
+    print(f"\nFitting TTF marginal {i}")
     m = TTFMarginal()
     m.fit(X_train[:, i].astype(np.float64), n_steps=30000, lr=5e-3, batch_size=512,
           early_stop_patience=100, eval_period=20, verbose=True, tag=f"ttf-dim{i}")
@@ -444,13 +439,13 @@ joint_model_train = keras.Model(inputs=[jb_in, jn_in, jl_in, jo_in],
 joint_model_train.compile(optimizer=keras.optimizers.Nadam(learning_rate=0.001),
                           loss="mae", loss_weights=[2, 1, 1, 1.0, 2])
 
-print("\nTraining neural copula...")
+print("\nTraining neural copula")
 joint_model_train.fit(
     x=[jb_data, jn_data, jl_data, jo_data],
     y=[jb_labels, np.zeros([1,1],dtype=np.float32), np.ones([1,1],dtype=np.float32),
        jl_labels, jo_labels],
     epochs=80000, verbose=0)
-print("Training complete.")
+print("Training complete")
 
 
 # TAIL METRICS
@@ -504,5 +499,5 @@ ax2.legend(); ax2.grid(alpha=0.2)
 plt.tight_layout()
 plt.savefig("chi_comparison.png", dpi=150, bbox_inches='tight')
 plt.show()
-print("Saved → chi_comparison.png")
+
 
