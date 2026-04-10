@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
 
-# In[ ]:
 
 
 import tensorflow as tf
@@ -21,17 +18,15 @@ import numpy.matlib
 import time
 import os
 
-# Create weight directories
 os.makedirs('./initial_weights', exist_ok=True)
 os.makedirs('./best_weights',    exist_ok=True)
 
-# Reproducibility
+
 from numpy.random import seed
 seed(0)
 tf.random.set_seed(0)
 
-# Load & normalise data
-# Generate synthetic wind/flood loss data if CSV not present (swap for real CSV)
+
 try:
     df = pd.read_csv("wind_flood_loss_pairs2.csv")
     data_x = df["log_wind"].values.astype(np.float32).reshape(-1, 1)
@@ -50,15 +45,13 @@ for i in range(data.shape[-1]):
 
 X_train, X_test = train_test_split(data, test_size=0.33, random_state=42)
 
-# Key constants 
+
 number_of_dimension       = 2
 number_of_training_samples = X_train.shape[0]
 
-# data_domain: [d x 2]
 data_domain = np.array([[X_train[:, i].min(), X_train[:, i].max()]
                          for i in range(number_of_dimension)], dtype=np.float32)
 
-# hyper-parameters 
 num_hidden_layers_for_marginal_distribution  = 5
 hidden_layer_width_for_marginal_distribution = 5
 num_hidden_layers_for_copula                 = 5
@@ -181,7 +174,7 @@ marginal_training_labels = (marginal_boundary_loss_label_list +
                              marginal_sum_loss_label_list      +
                              marginal_log_loss_label_list)
 
-# Build marginal training model 
+# Build marginal model 
 marginal_boundary_loss_input_list = [keras.layers.Input(shape=(2, 1))
                                       for _ in range(number_of_dimension)]
 marginal_neg_sum_loss_input_list  = [keras.layers.Input(shape=(number_marginal_points, 1))
@@ -227,7 +220,6 @@ marginal_loss_output_list = (marginal_boundary_loss_output_list +
 marginal_model_train = keras.Model(inputs=marginal_loss_input_list,
                                     outputs=marginal_loss_output_list)
 
-# Save initial weights (train 0 epochs to initialise variables first) 
 marginal_model_train.compile(optimizer=keras.optimizers.Nadam(learning_rate=0.001),
                               loss="mae")
 marginal_model_train.fit(x=marginal_training_input_data,
@@ -241,7 +233,6 @@ temp_history = marginal_model_train.fit(x=marginal_training_input_data,
 marginal_loss_keys = list(temp_history.history.keys())
 print(marginal_loss_keys)
 
-# Callback 
 class Marginal_Model_Training_Callback(tf.keras.callbacks.Callback):
     def __init__(self, record_interval=10, show_interval=100, verbose=1):
         super().__init__()
@@ -278,8 +269,6 @@ class Marginal_Model_Training_Callback(tf.keras.callbacks.Callback):
             plt.tight_layout()
             plt.show()
 
-# Train marginals
-# loss_weights: 2 boundary + 2 neg + 2 sum + 2 log  (8 outputs for d=2)
 marginal_epoch_number_list = []
 marginal_losses_list       = []
 
@@ -301,13 +290,10 @@ marginal_model_train.fit(
         record_interval=1000, show_interval=1000, verbose=1)])
 print("--- %.1f seconds ---" % (time.time() - start_time))
 
-
-# COPULA (JOINT) TRAINING DATA
 number_boundary_points   = 400
 number_partition_per_dim = 50
 number_observation_points = 100
 
-# Boundary loss data
 joint_boundary_loss_data   = []
 joint_boundary_loss_labels = []
 for i in range(number_of_dimension):
@@ -326,7 +312,6 @@ joint_boundary_loss_data   = np.expand_dims(
 joint_boundary_loss_labels = np.expand_dims(
     np.concatenate(joint_boundary_loss_labels, axis=0), axis=0)
 
-# Neg/sum loss data 
 grids = np.meshgrid(*[np.linspace(0, 1, number_partition_per_dim)
                        for _ in range(number_of_dimension)])
 joint_neg_sum_loss_data = np.expand_dims(
@@ -334,11 +319,9 @@ joint_neg_sum_loss_data = np.expand_dims(
 joint_neg_loss_labels = np.zeros([1, 1], dtype=np.float32)
 joint_sum_loss_labels = np.ones( [1, 1], dtype=np.float32)
 
-# Log-likelihood data
 joint_log_loss_data   = np.expand_dims(X_train.astype(np.float32), axis=0)
 joint_log_loss_labels = np.zeros([1, 1], dtype=np.float32) + 5.0
 
-# Empirical CDF observation data
 joint_observation_loss_data = np.expand_dims(
     np.random.rand(number_observation_points, number_of_dimension).astype(np.float32), axis=0)
 joint_observation_loss_labels = np.zeros([1, number_observation_points], dtype=np.float32)
@@ -364,7 +347,6 @@ joint_training_labels     = [joint_boundary_loss_labels, joint_neg_loss_labels,
                               joint_sum_loss_labels,      joint_log_loss_labels,
                               joint_observation_loss_labels]
 
-# Build copula training model
 joint_boundary_loss_input    = keras.layers.Input(shape=joint_boundary_loss_data.shape[1:])
 joint_neg_sum_loss_input     = keras.layers.Input(shape=joint_neg_sum_loss_data.shape[1:])
 joint_log_loss_input         = keras.layers.Input(shape=joint_log_loss_data.shape[1:])
@@ -412,7 +394,7 @@ joint_loss_output_list = [joint_boundary_loss_output, joint_neg_loss_output,
 joint_model_train = keras.Model(inputs=joint_loss_input_list,
                                  outputs=joint_loss_output_list)
 
-# Save joint initial weights 
+
 joint_model_train.compile(optimizer=keras.optimizers.Nadam(learning_rate=0.0001),
                            loss="mae")
 joint_model_train.fit(x=joint_training_input_data,
@@ -426,7 +408,7 @@ temp_history   = joint_model_train.fit(x=joint_training_input_data,
 joint_loss_keys = list(temp_history.history.keys())
 print(joint_loss_keys)
 
-# Callback 
+
 class Joint_Model_Training_Callback(tf.keras.callbacks.Callback):
     def __init__(self, record_interval=10, show_interval=100, verbose=1):
         super().__init__()
@@ -476,7 +458,7 @@ class Joint_Model_Training_Callback(tf.keras.callbacks.Callback):
             plt.tight_layout()
             plt.show()
 
-# Freeze marginals, train copula
+
 for m in marginal_model_list:
     m.trainable = False
 
@@ -499,7 +481,7 @@ joint_model_train.fit(
 print("--- %.1f seconds ---" % (time.time() - start_time))
 
 
-# In[ ]:
+
 
 
 domain_space = 80
@@ -522,19 +504,16 @@ ax.set_title('Fitted joint density vs test data')
 ax.legend(); plt.show()
 
 
-# In[ ]:
-
 
 n_check = 200
 check_pts = np.random.rand(n_check, 2).astype(np.float32)
 
-# Empirical CDF
 emp_cdf = np.array([
     np.mean((X_test[:,0] <= pt[0]) & (X_test[:,1] <= pt[1]))
     for pt in check_pts
 ])
 
-# Model CDF: pass through marginals then copula
+
 u_check = marginal_prediction_model_list[0].predict(check_pts[:,0:1], verbose=0)[0]
 v_check = marginal_prediction_model_list[1].predict(check_pts[:,1:2], verbose=0)[0]
 uv_check = np.column_stack([u_check, v_check]).astype(np.float32)
@@ -547,7 +526,7 @@ ax.set_xlabel('Empirical CDF'); ax.set_ylabel('Model CDF')
 ax.set_title('Empirical vs Fitted joint CDF'); ax.legend()
 plt.show()
 
-# Quantify with RMSE
+# RMSE
 rmse = np.sqrt(np.mean((emp_cdf - model_cdf)**2))
 print(f"CDF RMSE: {rmse:.4f}  (lower is better, 0 = perfect)")
 
