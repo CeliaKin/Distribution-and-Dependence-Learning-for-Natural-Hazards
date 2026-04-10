@@ -33,7 +33,7 @@ wind   = pd.to_numeric(df_raw["wind_loss"],  errors="coerce")
 flood  = pd.to_numeric(df_raw["flood_loss"], errors="coerce")
 df_clean = pd.DataFrame({"wind_loss": wind, "flood_loss": flood}).dropna()
 print(f"Loaded {len(df_clean):,} rows")
-print(df_clean.describe())
+
 
 
 df_clean["log_wind"]  = np.log(df_clean["wind_loss"]  + 1)
@@ -56,8 +56,6 @@ number_of_training_samples = X_train.shape[0]
 data_domain = np.array([[X_train[:, i].min(), X_train[:, i].max()]
                          for i in range(number_of_dimension)], dtype=np.float32)
 
-print(f"\nX_train shape: {X_train.shape}")
-print(f"data_domain:\n{data_domain}")
 
 
 
@@ -122,7 +120,7 @@ class TTFMarginal:
 
 ttf_marginal_list = []
 for i in range(number_of_dimension):
-    print(f"\n── Fitting TTF marginal for dimension {i} ──")
+    print(f"\nFitting TTF marginal for dimension {i}")
     x_i = X_train[:, i].astype(np.float64)
     m   = TTFMarginal()
     m.fit(x_i, n_steps=12000, lr=5e-3, batch_size=512,
@@ -148,9 +146,8 @@ for i, m in enumerate(ttf_marginal_list):
     ax.legend(fontsize=8, frameon=False)
     ax.spines[["top", "right"]].set_visible(False)
 plt.tight_layout()
-plt.savefig("ttf_marginals_check.png", dpi=150, bbox_inches="tight")
-plt.show()
-print("Marginal check plot saved.")
+
+
 
 
 # COPULA ARCHITECTURE 
@@ -208,7 +205,7 @@ joint_log_cdfs_np = np.column_stack([
     for i in range(number_of_dimension)
 ]).astype(np.float32)
 
-print(f"joint_log_cdfs_np shape: {joint_log_cdfs_np.shape}")
+
 print(f"CDF ranges: "
       + "  ".join([f"dim{i}: [{joint_log_cdfs_np[:,i].min():.3f}, "
                    f"{joint_log_cdfs_np[:,i].max():.3f}]"
@@ -261,11 +258,7 @@ for j, u in enumerate(obs_u):
     flags = np.all(joint_log_cdfs_np <= u, axis=1)
     joint_observation_loss_labels[0, j] = flags.mean()
 
-print("Copula training data shapes:")
-print(f"  boundary:    {joint_boundary_loss_data.shape}")
-print(f"  neg/sum:     {joint_neg_sum_loss_data.shape}")
-print(f"  log CDFs:    {joint_log_cdfs_input_data.shape}")
-print(f"  observation: {joint_observation_loss_data.shape}")
+
 
 
 
@@ -356,7 +349,7 @@ temp_history    = joint_model_train.fit(
     x=joint_training_input_data, y=joint_training_labels,
     epochs=1, verbose=0)
 joint_loss_keys = list(temp_history.history.keys())
-print("Joint loss keys:", joint_loss_keys)
+
 
 # COPULA TRAINING CALLBACK
 
@@ -477,7 +470,7 @@ ax2.spines[["top", "right"]].set_visible(False)
 plt.tight_layout()
 plt.savefig("ttf_copula_joint_density.png", dpi=150, bbox_inches="tight")
 plt.show()
-print("Final plot saved -> ttf_copula_joint_density.png")
+
 
 
 
