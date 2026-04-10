@@ -27,18 +27,11 @@ seed(0)
 tf.random.set_seed(0)
 
 
-try:
-    df = pd.read_csv("wind_flood_loss_pairs2.csv")
-    data_x = df["log_wind"].values.astype(np.float32).reshape(-1, 1)
-    data_y = df["log_flood"].values.astype(np.float32).reshape(-1, 1)
-    data   = np.concatenate((data_x, data_y), axis=1)
-except FileNotFoundError:
-    np.random.seed(42)
-    n = 1000
-    wind  = np.random.exponential(scale=1.0, size=n).astype(np.float32)
-    flood = 0.6 * wind + 0.4 * np.random.exponential(scale=1.0, size=n).astype(np.float32)
-    data  = np.column_stack([wind, flood])
-    print("CSV not found — using synthetic data for demonstration.")
+df = pd.read_csv("wind_flood_loss_pairs2.csv")
+data_x = df["log_wind"].values.astype(np.float32).reshape(-1, 1)
+data_y = df["log_flood"].values.astype(np.float32).reshape(-1, 1)
+data   = np.concatenate((data_x, data_y), axis=1)
+
 
 for i in range(data.shape[-1]):
     data[:, i] = (data[:, i] - np.min(data[:, i])) /                  (np.max(data[:, i]) - np.min(data[:, i]))
@@ -156,9 +149,6 @@ marginal_log_loss_data_list = [
     for i in range(number_of_dimension)
 ]
 
-print('marginal_boundary_loss_data_list: d x', marginal_boundary_loss_data_list[0].shape)
-print('marginal_neg_sum_loss_data_list:  d x', marginal_neg_sum_loss_data_list[0].shape)
-print('marginal_log_loss_data_list:      d x', marginal_log_loss_data_list[0].shape)
 
 marginal_training_input_data = (marginal_boundary_loss_data_list +
                                  marginal_neg_sum_loss_data_list  +
@@ -231,7 +221,7 @@ temp_history = marginal_model_train.fit(x=marginal_training_input_data,
                                          y=marginal_training_labels,
                                          epochs=1, verbose=0)
 marginal_loss_keys = list(temp_history.history.keys())
-print(marginal_loss_keys)
+
 
 class Marginal_Model_Training_Callback(tf.keras.callbacks.Callback):
     def __init__(self, record_interval=10, show_interval=100, verbose=1):
@@ -288,7 +278,7 @@ marginal_model_train.fit(
     epochs=20000, verbose=0,
     callbacks=[Marginal_Model_Training_Callback(
         record_interval=1000, show_interval=1000, verbose=1)])
-print("--- %.1f seconds ---" % (time.time() - start_time))
+print("%.1f seconds" % (time.time() - start_time))
 
 number_boundary_points   = 400
 number_partition_per_dim = 50
@@ -331,15 +321,7 @@ for i, crd in enumerate(joint_observation_loss_data[0]):
         flags = np.logical_and(flags, X_train[:, d] <= crd[d])
     joint_observation_loss_labels[0, i] = np.sum(flags) / X_train.shape[0]
 
-print('joint_boundary_loss_data:',     joint_boundary_loss_data.shape)
-print('joint_neg_sum_loss_data:',      joint_neg_sum_loss_data.shape)
-print('joint_log_loss_data:',          joint_log_loss_data.shape)
-print('joint_observation_loss_data:',  joint_observation_loss_data.shape)
-print('joint_boundary_loss_labels:',   joint_boundary_loss_labels.shape)
-print('joint_neg_loss_labels:',        joint_neg_loss_labels.shape)
-print('joint_sum_loss_labels:',        joint_sum_loss_labels.shape)
-print('joint_log_loss_labels:',        joint_log_loss_labels.shape)
-print('joint_observation_loss_labels:', joint_observation_loss_labels.shape)
+
 
 joint_training_input_data = [joint_boundary_loss_data, joint_neg_sum_loss_data,
                               joint_log_loss_data,      joint_observation_loss_data]
@@ -406,7 +388,7 @@ temp_history   = joint_model_train.fit(x=joint_training_input_data,
                                         y=joint_training_labels,
                                         epochs=1, verbose=0)
 joint_loss_keys = list(temp_history.history.keys())
-print(joint_loss_keys)
+
 
 
 class Joint_Model_Training_Callback(tf.keras.callbacks.Callback):
@@ -478,7 +460,7 @@ joint_model_train.fit(
     epochs=40000, verbose=0,
     callbacks=[Joint_Model_Training_Callback(
         record_interval=1000, show_interval=1000, verbose=1)])
-print("--- %.1f seconds ---" % (time.time() - start_time))
+print("%.1f seconds" % (time.time() - start_time))
 
 
 
@@ -528,5 +510,5 @@ plt.show()
 
 # RMSE
 rmse = np.sqrt(np.mean((emp_cdf - model_cdf)**2))
-print(f"CDF RMSE: {rmse:.4f}  (lower is better, 0 = perfect)")
+print(f"CDF RMSE: {rmse:.4f}")
 
