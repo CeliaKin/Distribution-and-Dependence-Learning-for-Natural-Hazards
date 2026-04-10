@@ -42,7 +42,7 @@ class MonotonicFlow(nn.Module):
 model = MonotonicFlow()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
-print("Training Normalizing Flow...")
+print("Training Normalizing Flow")
 for i in range(2500):
     optimizer.zero_grad()
     loss = -model.log_prob(x_t).mean()
