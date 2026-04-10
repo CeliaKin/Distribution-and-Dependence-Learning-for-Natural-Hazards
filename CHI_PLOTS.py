@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
 
-# In[1]:
 
 
 import os
@@ -384,7 +381,6 @@ joint_log_cdfs_np = np.column_stack([
     ttf_marginal_list[i].cdf(X_train[:, i].reshape(-1,1)).ravel()
     for i in range(number_of_dimension)]).astype(np.float32)
 
-# Boundary
 number_boundary_points = 400
 bd_data, bd_labels = [], []
 for i in range(number_of_dimension):
@@ -402,11 +398,9 @@ number_partition_per_dim = 50
 grids = np.meshgrid(*[np.linspace(0, 1, number_partition_per_dim) for _ in range(number_of_dimension)])
 jn_data = np.expand_dims(np.column_stack([g.ravel() for g in grids]).astype(np.float32), axis=0)
 
-# Log-likelihood
 jl_data   = np.expand_dims(joint_log_cdfs_np, axis=0)
 jl_labels = np.zeros([1, 1], dtype=np.float32) + 5.0
 
-# Observation
 rng_obs = np.random.default_rng(42)
 obs_u = rng_obs.random((100, number_of_dimension)).astype(np.float32)
 jo_data   = np.expand_dims(obs_u, axis=0)
@@ -414,7 +408,6 @@ jo_labels = np.zeros([1, 100], dtype=np.float32)
 for j, u in enumerate(obs_u):
     jo_labels[0, j] = np.all(joint_log_cdfs_np <= u, axis=1).mean()
 
-# Build training model
 jb_in = keras.layers.Input(shape=jb_data.shape[1:])
 jn_in = keras.layers.Input(shape=jn_data.shape[1:])
 jl_in = keras.layers.Input(shape=jl_data.shape[1:])
